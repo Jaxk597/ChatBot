@@ -1,0 +1,18 @@
+{
+    "name": "Chatsupport",
+    "description": "",
+    "services": [
+        {
+            "type": "endpoint",
+            "name": "http://localhost:3978/api/messages",
+            "id": "730a0400-1143-11ec-b5d3-3b681c590925",
+            "appId": "",
+            "appPassword": "",
+            "endpoint": "http://localhost:3978/api/messages"
+        }
+    ],
+    "padlock": "",
+    "version": "2.0",
+    "path": "C:\\Users\\Konstanze Scheel\\IdeaProjects\\ChatBot\\Chatsupport.bot",
+    "overrides": null
+}
