@@ -47,7 +47,6 @@ public class EchoBot extends ActivityHandler {
                     .thenCompose(response -> sendEndCard(turnContext))
                     .thenApply(result -> null);
         }
-            ;
 
         return turnContext.sendActivity(
             MessageFactory.text("Echo: " + turnContext.getActivity().getText())
@@ -93,7 +92,35 @@ public class EchoBot extends ActivityHandler {
         card.setText("Wir hoffen, das wir ihnen weiterhelfen konnten");
         Activity responce = MessageFactory.attachment((card.toAttachment()));
         return  turnContext.sendActivity(responce);
+
+
     }
+    private CompletableFuture<ResourceResponse> sendWorkerCard(TurnContext turnContext) {
+        HeroCard card = new HeroCard();
+        card.setTitle("Mit Mitarbeiter Reden");
+        card.setText(
+                "Mit Mitarbeiter Reden"
+        );
+
+        CardImage image = new CardImage();
+        image.setUrl("https://aka.ms/bf-welcome-card-image");
+
+        card.setImages(Collections.singletonList(image));
+
+        CardAction talkAction = new CardAction();
+        talkAction.setType(ActionTypes.MESSAGE_BACK);
+        talkAction.setTitle("Mit Mitarbeiter Reden");
+        talkAction.setText("Mit Mitarbeiter Reden");
+        talkAction.setDisplayText("Mit Mitarbeiter Reden");
+        talkAction.setValue("Mit Mitarbeiter Reden");
+
+        card.setButtons(Arrays.asList(talkAction));
+
+        Activity response = MessageFactory.attachment(card.toAttachment());
+        return turnContext.sendActivity(response);
+    }
+
+
 
 
     // COPY PASTE"
