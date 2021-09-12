@@ -27,7 +27,28 @@ import java.util.concurrent.CompletableFuture;
 public class EchoBot extends ActivityHandler {
 
     @Override
-    protected CompletableFuture<Void> onMessageActivity(TurnContext turnContext) {
+    protected CompletableFuture<Void> onMessageActivity(TurnContext turnContext){
+        String text = turnContext.getActivity().getText().toLowerCase();
+
+        if(text.toLowerCase().matches(".*mitarbeiter.*")
+                ||  text.toLowerCase().matches(".*lob.*")
+                ||  text.toLowerCase().matches(".*beschwerde.*") )
+        {
+            return turnContext.sendActivity(
+                    MessageFactory.text("Mitarbeiterproblem"))
+                    .thenCompose(response -> sendIntroCard(turnContext))
+                    .thenApply(sendResult -> null);
+        }else if (text.toLowerCase().matches(".*sprech.*")
+                || text.toLowerCase().matches(".*ander.*") )
+        {
+            return turnContext
+                    .sendActivity(MessageFactory.text("Anderes Problem"))
+                    .thenCompose(response -> sendOtherCard(turnContext))
+                    .thenCompose(response -> sendEndCard(turnContext))
+                    .thenApply(result -> null);
+        }
+            ;
+
         return turnContext.sendActivity(
             MessageFactory.text("Echo: " + turnContext.getActivity().getText())
         ).thenApply(sendResult -> null);
@@ -45,6 +66,37 @@ public class EchoBot extends ActivityHandler {
             ).map(channel -> turnContext.sendActivity(MessageFactory.text("Hello and welcome!")))
             .collect(CompletableFutures.toFutureList()).thenApply(resourceResponses -> null);
     }
+
+    //copy paste "
+
+    //        turnContext.setLocale("locale");
+    //        turnContext.getLocale();
+    //        Overwrite von Eingabe (sehr gefährlich
+    //        turnContext.getActivity().setText("mitarbeiter");
+
+
+    private CompletableFuture<ResourceResponse> sendOtherCard(TurnContext turnContext) {
+        HeroCard card = new HeroCard();
+        card.setTitle("Bitte Melden sie sich bei einem Mitarbeiter!");
+        card.setText(
+                "Sie können einen unserer Mitarbeiter erreichen über Email:"
+                + " itsupport@unternehmen.com oder über Telefon: "
+                + "0900/1234567890"
+        );
+        Activity response = MessageFactory.attachment(card.toAttachment());
+        return turnContext.sendActivity(response);
+    }
+
+    private CompletableFuture<ResourceResponse> sendEndCard(TurnContext turnContext) {
+        HeroCard card = new HeroCard();
+        card.setTitle("Vielen Dank");
+        card.setText("Wir hoffen, das wir ihnen weiterhelfen konnten");
+        Activity responce = MessageFactory.attachment((card.toAttachment()));
+        return  turnContext.sendActivity(responce);
+    }
+
+
+    // COPY PASTE"
 
     private CompletableFuture<ResourceResponse> sendIntroCard(TurnContext turnContext) {
         HeroCard card = new HeroCard();
