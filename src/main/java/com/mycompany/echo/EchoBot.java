@@ -10,9 +10,11 @@ import com.microsoft.bot.builder.TurnContext;
 import com.microsoft.bot.schema.*;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -26,20 +28,32 @@ import java.util.concurrent.CompletableFuture;
  */
 public class EchoBot extends ActivityHandler {
 
+    private int control = 0;
+
     @Override
     protected CompletableFuture<Void> onMessageActivity(TurnContext turnContext){
         String text = turnContext.getActivity().getText().toLowerCase();
 
-        if(text.toLowerCase().matches(".*mitarbeiter.*")
-                ||  text.toLowerCase().matches(".*lob.*")
-                ||  text.toLowerCase().matches(".*beschwerde.*") )
+        if (control == 11){
+            return  turnContext.sendActivity(MessageFactory.text("Hehe even sMaRTeR BoYo")).thenApply(result -> null);
+        }
+
+        if (text.equals("145213571892")) {
+            return turnContext.sendActivity(
+                    MessageFactory.text("Hehe i am so smart boyo"))
+                    .thenCompose(response -> sendEndCard(turnContext))
+                    .thenApply(result -> null);
+            }
+
+
+        if(text.matches(".*arbeiter.*"))
         {
             return turnContext.sendActivity(
                     MessageFactory.text("Mitarbeiterproblem"))
-                    .thenCompose(response -> sendIntroCard(turnContext))
+                    .thenCompose(response -> sendWorkerCard(turnContext))
                     .thenApply(sendResult -> null);
-        }else if (text.toLowerCase().matches(".*sprech.*")
-                || text.toLowerCase().matches(".*ander.*") )
+        }else if (text.matches(".*sprech.*")
+                || text.matches(".*ander.*") )
         {
             return turnContext
                     .sendActivity(MessageFactory.text("Anderes Problem"))
@@ -96,6 +110,7 @@ public class EchoBot extends ActivityHandler {
 
     }
     private CompletableFuture<ResourceResponse> sendWorkerCard(TurnContext turnContext) {
+        control = 1;
         HeroCard card = new HeroCard();
         card.setTitle("Mit Mitarbeiter Reden");
         card.setText(
@@ -110,9 +125,9 @@ public class EchoBot extends ActivityHandler {
         CardAction talkAction = new CardAction();
         talkAction.setType(ActionTypes.MESSAGE_BACK);
         talkAction.setTitle("Mit Mitarbeiter Reden");
-        talkAction.setText("Mit Mitarbeiter Reden");
+        talkAction.setText("145213571892");
         talkAction.setDisplayText("Mit Mitarbeiter Reden");
-        talkAction.setValue("Mit Mitarbeiter Reden");
+        talkAction.setValue("145213571892");
 
         card.setButtons(Arrays.asList(talkAction));
 
