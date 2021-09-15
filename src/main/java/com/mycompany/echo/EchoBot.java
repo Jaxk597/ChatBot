@@ -196,6 +196,13 @@ public class EchoBot extends ActivityHandler {
         return turnContext.sendActivity(response);
     }
 
+    private CompletableFuture<ResourceResponse> sendIdCard(TurnContext turnContext) {
+        Activity response = null;
+        return turnContext.sendActivity(response);
+    }
+
+
+
 // ---------------------------------------------------------------------------------------------------------------------
     // COPY PASTE"          DAS DARUNTER NOCH ENTFERNEN KAPPA
 // ---------------------------------------------------------------------------------------------------------------------
