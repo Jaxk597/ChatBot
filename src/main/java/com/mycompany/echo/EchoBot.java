@@ -10,7 +10,7 @@ import com.microsoft.bot.builder.TurnContext;
 import com.microsoft.bot.schema.*;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.InputStream;
+import java.io.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -34,39 +34,60 @@ public class EchoBot extends ActivityHandler {
     protected CompletableFuture<Void> onMessageActivity(TurnContext turnContext){
         String text = turnContext.getActivity().getText().toLowerCase();
 
-        if (control == 11){
-            return  turnContext.sendActivity(MessageFactory.text("Hehe even sMaRTeR BoYo")).thenApply(result -> null);
+        if (control == 100){
+            return  turnContext
+                    .sendActivity(MessageFactory.text(""))
+                    .thenCompose(response -> sendResponseAnswerCard(turnContext))
+                    .thenApply(result -> null);
+        }
+
+        //Papers Please!
+        if (control == 597) {
+            return turnContext
+                    .sendActivity(MessageFactory.text(""))
+                    .thenCompose(response -> sendIdCard(turnContext))
+                    .thenApply(result -> null);
         }
 
         if (text.equals("145213571892")) {
-            return turnContext.sendActivity(
-                    MessageFactory.text("Hehe i am so smart boyo"))
+            return turnContext
+                    .sendActivity(MessageFactory.text("Hehe i am so smart boyo"))
                     .thenCompose(response -> sendEndCard(turnContext))
                     .thenApply(result -> null);
             }
 
-
+        if (text.equals("rueckmeldung1")) {
+            return turnContext
+                    .sendActivity(MessageFactory.text("Schreiben sie hier einfach ihre Rückmeldung, wir leiten sie daraufhin an unseren Mitarbeiter weiter"))
+                    .thenCompose(response -> sendAnswerCard(turnContext))
+                    .thenApply(sendResult -> null);
+        }
+        //Mitarbeiterproblem
         if(text.matches(".*arbeiter.*"))
         {
             return turnContext.sendActivity(
                     MessageFactory.text("Mitarbeiterproblem"))
                     .thenCompose(response -> sendWorkerCard(turnContext))
                     .thenApply(sendResult -> null);
-        }else if (text.matches(".*sprech.*")
+        }
+        // Anders Problem / Mit Mitarbeiter Sprechen
+        if (text.matches(".*sprech.*")
                 || text.matches(".*ander.*") )
         {
             return turnContext
-                    .sendActivity(MessageFactory.text("Anderes Problem"))
+                    .sendActivity(MessageFactory.text(""))
                     .thenCompose(response -> sendOtherCard(turnContext))
                     .thenCompose(response -> sendEndCard(turnContext))
                     .thenApply(result -> null);
         }
 
+        // ECHOOOOOOOO
         return turnContext.sendActivity(
             MessageFactory.text("Echo: " + turnContext.getActivity().getText())
         ).thenApply(sendResult -> null);
     }
 
+    // Wilkommensnachricht, standard bei jedem chatfenster
     @Override
     protected CompletableFuture<Void> onMembersAdded(
         List<ChannelAccount> membersAdded,
@@ -76,7 +97,7 @@ public class EchoBot extends ActivityHandler {
             .filter(
                 member -> !StringUtils
                     .equals(member.getId(), turnContext.getActivity().getRecipient().getId())
-            ).map(channel -> turnContext.sendActivity(MessageFactory.text("Hello and welcome!")))
+            ).map(channel -> turnContext.sendActivity(MessageFactory.text("Hallo, wie Kann man ihnen weiterhelfen?")))
             .collect(CompletableFutures.toFutureList()).thenApply(resourceResponses -> null);
     }
 
@@ -88,6 +109,8 @@ public class EchoBot extends ActivityHandler {
     //        turnContext.getActivity().setText("mitarbeiter");
 
 
+
+    //Mitarbeiter END Card
     private CompletableFuture<ResourceResponse> sendOtherCard(TurnContext turnContext) {
         HeroCard card = new HeroCard();
         card.setTitle("Bitte Melden sie sich bei einem Mitarbeiter!");
@@ -100,21 +123,25 @@ public class EchoBot extends ActivityHandler {
         return turnContext.sendActivity(response);
     }
 
+
+    //Standard END Card
     private CompletableFuture<ResourceResponse> sendEndCard(TurnContext turnContext) {
         HeroCard card = new HeroCard();
         card.setTitle("Vielen Dank");
         card.setText("Wir hoffen, das wir ihnen weiterhelfen konnten");
-        Activity responce = MessageFactory.attachment((card.toAttachment()));
-        return  turnContext.sendActivity(responce);
+        Activity response = MessageFactory.attachment((card.toAttachment()));
+        return  turnContext.sendActivity(response);
 
 
     }
+
+    //Dialog für Mitarbeiter
     private CompletableFuture<ResourceResponse> sendWorkerCard(TurnContext turnContext) {
         control = 1;
         HeroCard card = new HeroCard();
-        card.setTitle("Mit Mitarbeiter Reden");
+        card.setTitle("Probleme mit unseren Mitarbeitern?");
         card.setText(
-                "Mit Mitarbeiter Reden"
+                "Sie können..."
         );
 
         CardImage image = new CardImage();
@@ -125,21 +152,53 @@ public class EchoBot extends ActivityHandler {
         CardAction talkAction = new CardAction();
         talkAction.setType(ActionTypes.MESSAGE_BACK);
         talkAction.setTitle("Mit Mitarbeiter Reden");
-        talkAction.setText("145213571892");
+        talkAction.setText("ander");
         talkAction.setDisplayText("Mit Mitarbeiter Reden");
-        talkAction.setValue("145213571892");
+        talkAction.setValue("ander");
 
-        card.setButtons(Arrays.asList(talkAction));
+        CardAction lobAction = new CardAction();
+        lobAction.setType(ActionTypes.MESSAGE_BACK);
+        lobAction.setTitle("Einen Mitarbeiter loben/bescherde einreichen");
+        lobAction.setText("Rueckmeldung1");
+        lobAction.setDisplayText("Einen Mitarbeiter loben/bescherde einreichen");
+        lobAction.setValue("Rueckmeldung1");
+
+        card.setButtons(Arrays.asList(talkAction, lobAction));
 
         Activity response = MessageFactory.attachment(card.toAttachment());
         return turnContext.sendActivity(response);
     }
 
+    //Initialisierung von der Rückmeldung
+    private CompletableFuture<ResourceResponse> sendAnswerCard(TurnContext turnContext) {
+        control = 100;
+        Activity response = MessageFactory.text("");
+        return turnContext.sendActivity(response);
+    }
 
 
+    // Für die Antwort auf die Rückmeldung / Noch in Datei Schreiben Lassen!!!
+    private CompletableFuture<ResourceResponse> sendResponseAnswerCard(TurnContext turnContext) {
+        Writer fileWriter;
+        File file;
+        try {
+            file = new File("Rueckmeldung.txt");
+            fileWriter = new FileWriter("Rueckmeldung.txt");
+            fileWriter.write(turnContext.getActivity().getText());
+            fileWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        HeroCard card = new HeroCard();
+        card.setTitle("Vielen Dank für ihre Rückmeldung!");
+        card.setText("Wir freuen uns über ihre Rückmeldung über unseren Service");
+        Activity response = MessageFactory.attachment((card.toAttachment()));
+        return turnContext.sendActivity(response);
+    }
 
-    // COPY PASTE"
-
+// ---------------------------------------------------------------------------------------------------------------------
+    // COPY PASTE"          DAS DARUNTER NOCH ENTFERNEN KAPPA
+// ---------------------------------------------------------------------------------------------------------------------
     private CompletableFuture<ResourceResponse> sendIntroCard(TurnContext turnContext) {
         HeroCard card = new HeroCard();
         card.setTitle("Welcome to Bot Framework!");
