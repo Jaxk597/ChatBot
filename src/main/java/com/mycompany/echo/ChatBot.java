@@ -37,9 +37,6 @@ public class ChatBot extends ActivityHandler {
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
 
-
-
-    // Initializes a new instance of the "ChatBot" class.
     @Autowired
     public ChatBot(com.microsoft.bot.builder.UserState withUserState, ConversationState withConversationState) {
         userState = withUserState;
@@ -118,6 +115,7 @@ public class ChatBot extends ActivityHandler {
             default:
                 if (mailAddressIsValid(turnContext.getActivity().getText())){
                     turnContext.sendActivity("Es hat geklappt. Sie erhalten in Kürze eine Mail.");
+                    sendIntroCard(turnContext);
                 }
                 else{
                     turnContext.sendActivity("Ungültige Eingabe.");
@@ -128,6 +126,7 @@ public class ChatBot extends ActivityHandler {
     }
 
     private CompletableFuture<Void> enterAnmeldeProbleme(TurnContext turnContext) {
+        //onTurn(turnContext);
         String text = turnContext.getActivity().getText();
         if (text.equals(LOGIN)) {
             HeroCard card = new HeroCard();
@@ -151,7 +150,7 @@ public class ChatBot extends ActivityHandler {
     private void enterAnmeldeDatenVergessen(TurnContext turnContext) {
         if (turnContext.getActivity().getText().equals("Passwort vergessen")){
             turnContext.sendActivity(MessageFactory.text("Bitte geben Sie Ihre E-Mailadresse an, mit der Sie bei uns registriert sind. " +
-                    "Sie erhalten dann in Kürze eine E-Mail zum zurücksetzen Ihres Passworts."));
+                    "Sie erhalten dann in Kürze eine E-Mail zum Zurücksetzen Ihres Passworts."));
         }
         else{
             turnContext.sendActivity(MessageFactory.text("Bitte geben Sie Ihre E-Mailadresse an, mit der Sie bei uns registriert sind. " +
