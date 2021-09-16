@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This class implements the functionality of the Bot.
@@ -31,6 +33,10 @@ public class ChatBot extends ActivityHandler {
     private static final String PROGRAM = "Probleme mit einem unserer Programme";
     private static final String CONTRACT = "Vertragsanliegen";
     private static final String PROJECT = "Projekt-/Mitarbeiteranliegen";
+    public static final Pattern VALID_EMAIL_ADDRESS_REGEX =
+            Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
+
+
 
 
     // Initializes a new instance of the "ChatBot" class.
@@ -110,7 +116,7 @@ public class ChatBot extends ActivityHandler {
             case PROJECT:
                 //return turnContext.sendActivity("[IMPLEMENTIERUNG PROJECT]");
             default:
-                if (turnContext.getActivity().getText().contains("@")){
+                if (mailAddressIsValid(turnContext.getActivity().getText())){
                     turnContext.sendActivity("Es hat geklappt. Sie erhalten in Kürze eine Mail.");
                 }
                 else{
@@ -160,4 +166,11 @@ public class ChatBot extends ActivityHandler {
                 // Save any state changes that might have occurred during the turn.
                 .thenCompose(result -> userState.saveChanges(turnContext));
     }
+
+    public static boolean mailAddressIsValid(String emailStr) {
+        Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(emailStr);
+        return matcher.find();
+    }
+
+
 }
