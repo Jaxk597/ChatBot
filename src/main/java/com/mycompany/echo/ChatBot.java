@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 /**
  * This class implements the functionality of the Bot.
@@ -94,7 +93,34 @@ public class ChatBot extends ActivityHandler {
         CompletableFuture<UserState> stateFuture =
                 stateAccessor.get(turnContext, () -> new UserState());
 
-        return stateFuture.thenApply(thisUserState -> {
+        //get text from User input
+        String usereingabe = turnContext.getActivity().getText();
+
+        switch (usereingabe) {
+            case "Passwort vergessen":
+                enterAnmeldeDatenVergessen(turnContext);
+            case "Benutzername vergessen":
+                enterAnmeldeDatenVergessen(turnContext);
+            case LOGIN:
+                return enterAnmeldeProbleme(turnContext);
+            case SERVER:
+                return onTurn(turnContext);
+            case PROGRAM:
+                //return turnContext.sendActivity("[IMPLEMENTIERUNG PROGRAM]");
+            case CONTRACT:
+                //return turnContext.sendActivity("[IMPLEMENTIERUNG CONTRACT]");
+            case PROJECT:
+                //return turnContext.sendActivity("[IMPLEMENTIERUNG PROJECT]");
+            default:
+                return null;
+            //return turnContext.sendActivity("Ungültige Eingabe. Bitte wählen Sie ein Anliegen aus.");
+        }
+    }
+
+
+
+
+       /* return stateFuture.thenApply(thisUserState -> {
                     // This example hard-codes specific utterances.
                     // You should use LUIS or QnA for more advance language understanding.
                     String text = turnContext.getActivity().getText();
@@ -111,36 +137,39 @@ public class ChatBot extends ActivityHandler {
                 // Save any state changes.
                 .thenApply(response -> userState.saveChanges(turnContext))
                 // make the return value happy.
-                .thenApply(task -> null);
-    }
+                .thenApply(task -> null);*/
 
-    private CompletableFuture<ResourceResponse> enterAnmeldeProbleme(TurnContext turnContext) {
+    private CompletableFuture<Void> enterAnmeldeProbleme(TurnContext turnContext) {
         //onTurn(turnContext); //state speichern (?)
+        String text = turnContext.getActivity().getText();
+        if (text.equals(LOGIN)) {
+            HeroCard card = new HeroCard();
+            card.setText("Bitte wählen Sie eine der folgenden Optionen: ");
+            List<String> actions = new ArrayList<>();
+            actions.add("Passwort vergessen");
+            actions.add("Benutzername vergessen");
+            List<CardAction> cardActions = new ArrayList<>();
+            for (String action : actions) {
+                CardAction cardAction = returnNewCardAction(action);
+                cardActions.add(cardAction);
+            }
+            card.setButtons(cardActions);
 
-        HeroCard card = new HeroCard();
-        card.setText("Bitte wählen Sie eine der folgenden Optionen: ");
-        List<String> actions = new ArrayList<>();
-        actions.add("Passwort vergessen");
-        actions.add("Benutzername vergessen");
-        List<CardAction> cardActions = new ArrayList<>();
-        for (String action : actions) {
-            CardAction cardAction = returnNewCardAction(action);
-            cardActions.add(cardAction);
+            Activity response = MessageFactory.attachment(card.toAttachment());
+            turnContext.sendActivity(response);
         }
-        card.setButtons(cardActions);
-
-       /* String text = turnContext.getActivity().getText();
-        if (text.equals("Passwort vergessen")){
-            return onPasswortVergessen(turnContext);
-        }*/
-
-        Activity response = MessageFactory.attachment(card.toAttachment());
-        return turnContext.sendActivity(response);
+        return null;
     }
 
-    private CompletableFuture<ResourceResponse> onPasswortVergessen(TurnContext turnContext) {
-
-            return turnContext.sendActivity(MessageFactory.text("Plalalala"));
+    private void enterAnmeldeDatenVergessen(TurnContext turnContext) {
+        if (turnContext.getActivity().getText().equals("Passwort vergessen")){
+            turnContext.sendActivity(MessageFactory.text("Bitte geben Sie Ihre E-Mailadresse an, mit der Sie bei uns registriert sind. " +
+                    "Sie erhalten dann in Kürze eine E-Mail zum zurücksetzen Ihres Passworts."));
+        }
+        else{
+            turnContext.sendActivity(MessageFactory.text("Bitte geben Sie Ihre E-Mailadresse an, mit der Sie bei uns registriert sind. " +
+                    "Sie erhalten dann in Kürze eine E-Mail mit Ihren Benutzerdaten."));
+        }
     }
 
     @Override
