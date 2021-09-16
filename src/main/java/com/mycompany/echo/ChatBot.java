@@ -88,17 +88,15 @@ public class ChatBot extends ActivityHandler {
     @Override
     protected CompletableFuture<Void> onMessageActivity(TurnContext turnContext) {
         // Get state data from UserState.
-        StatePropertyAccessor<UserState> stateAccessor =
+        /*StatePropertyAccessor<UserState> stateAccessor =
                 userState.createProperty("NewUserState");
         CompletableFuture<UserState> stateFuture =
-                stateAccessor.get(turnContext, () -> new UserState());
+                stateAccessor.get(turnContext, () -> new UserState());*/
 
-        //get text from User input
         String usereingabe = turnContext.getActivity().getText();
 
         switch (usereingabe) {
             case "Passwort vergessen":
-                enterAnmeldeDatenVergessen(turnContext);
             case "Benutzername vergessen":
                 enterAnmeldeDatenVergessen(turnContext);
             case LOGIN:
@@ -112,35 +110,18 @@ public class ChatBot extends ActivityHandler {
             case PROJECT:
                 //return turnContext.sendActivity("[IMPLEMENTIERUNG PROJECT]");
             default:
+                if (turnContext.getActivity().getText().contains("@")){
+                    turnContext.sendActivity("Es hat geklappt. Sie erhalten in Kürze eine Mail.");
+                }
+                else{
+                    turnContext.sendActivity("Ungültige Eingabe.");
+                }
                 return null;
             //return turnContext.sendActivity("Ungültige Eingabe. Bitte wählen Sie ein Anliegen aus.");
         }
     }
 
-
-
-
-       /* return stateFuture.thenApply(thisUserState -> {
-                    // This example hard-codes specific utterances.
-                    // You should use LUIS or QnA for more advance language understanding.
-                    String text = turnContext.getActivity().getText();
-                    switch (text) {
-                        case LOGIN: return enterAnmeldeProbleme(turnContext);
-                        case SERVER: return onTurn(turnContext);
-                        case PROGRAM: return turnContext.sendActivity("[IMPLEMENTIERUNG PROGRAM]");
-                        case CONTRACT: return turnContext.sendActivity("[IMPLEMENTIERUNG CONTRACT]");
-                        case PROJECT: return turnContext.sendActivity("[IMPLEMENTIERUNG PROJECT]");
-                        default:
-                            return turnContext.sendActivity("Ungültige Eingabe. Bitte wählen Sie ein Anliegen aus.");
-                    }
-                })
-                // Save any state changes.
-                .thenApply(response -> userState.saveChanges(turnContext))
-                // make the return value happy.
-                .thenApply(task -> null);*/
-
     private CompletableFuture<Void> enterAnmeldeProbleme(TurnContext turnContext) {
-        //onTurn(turnContext); //state speichern (?)
         String text = turnContext.getActivity().getText();
         if (text.equals(LOGIN)) {
             HeroCard card = new HeroCard();
