@@ -64,7 +64,11 @@ public class ChatBot extends ActivityHandler {
         actions.add(CONTRACT);
         actions.add(PROJECT);
 
-        List<CardAction> cardActions = actions.stream().map(this::returnNewCardAction).collect(Collectors.toList());
+        List<CardAction> cardActions = new ArrayList<>();
+        for (String action : actions) {
+            CardAction cardAction = returnNewCardAction(action);
+            cardActions.add(cardAction);
+        }
 
         card.setButtons(cardActions);
 
@@ -88,14 +92,14 @@ public class ChatBot extends ActivityHandler {
         StatePropertyAccessor<UserState> stateAccessor =
                 userState.createProperty("NewUserState");
         CompletableFuture<UserState> stateFuture =
-                stateAccessor.get(turnContext, UserState::new);
+                stateAccessor.get(turnContext, () -> new UserState());
 
         return stateFuture.thenApply(thisUserState -> {
                     // This example hard-codes specific utterances.
                     // You should use LUIS or QnA for more advance language understanding.
                     String text = turnContext.getActivity().getText();
                     switch (text) {
-                        case LOGIN: return turnContext.sendActivity("[IMPLEMENTIERUNG LOGIN]");
+                        case LOGIN: return enterAnmeldeProbleme(turnContext);
                         case SERVER: return onTurn(turnContext);
                         case PROGRAM: return turnContext.sendActivity("[IMPLEMENTIERUNG PROGRAM]");
                         case CONTRACT: return turnContext.sendActivity("[IMPLEMENTIERUNG CONTRACT]");
@@ -110,10 +114,37 @@ public class ChatBot extends ActivityHandler {
                 .thenApply(task -> null);
     }
 
+    private CompletableFuture<ResourceResponse> enterAnmeldeProbleme(TurnContext turnContext) {
+        //onTurn(turnContext); //state speichern (?)
+
+        HeroCard card = new HeroCard();
+        card.setText("Bitte wählen Sie eine der folgenden Optionen: ");
+        List<String> actions = new ArrayList<>();
+        actions.add("Passwort vergessen");
+        actions.add("Benutzername vergessen");
+        List<CardAction> cardActions = new ArrayList<>();
+        for (String action : actions) {
+            CardAction cardAction = returnNewCardAction(action);
+            cardActions.add(cardAction);
+        }
+        card.setButtons(cardActions);
+
+       /* String text = turnContext.getActivity().getText();
+        if (text.equals("Passwort vergessen")){
+            return onPasswortVergessen(turnContext);
+        }*/
+
+        Activity response = MessageFactory.attachment(card.toAttachment());
+        return turnContext.sendActivity(response);
+    }
+
+    private CompletableFuture<ResourceResponse> onPasswortVergessen(TurnContext turnContext) {
+
+            return turnContext.sendActivity(MessageFactory.text("Plalalala"));
+    }
+
     @Override
-    public CompletableFuture<Void> onTurn(
-            TurnContext turnContext
-    ) {
+    public CompletableFuture<Void> onTurn(TurnContext turnContext) {
         return super.onTurn(turnContext)
                 .thenCompose(result -> conversationState.saveChanges(turnContext))
                 // Save any state changes that might have occurred during the turn.
