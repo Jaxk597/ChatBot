@@ -19,5 +19,5 @@ package com.mycompany.echo;
  *
  * @see ChatBot
  */
-public class UserState {
+public class UserProfile {
 }

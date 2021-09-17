@@ -5,6 +5,7 @@ package com.mycompany.echo;
 
 import com.codepoetics.protonpack.collectors.CompletableFutures;
 import com.microsoft.bot.builder.*;
+import com.microsoft.bot.dialogs.Dialog;
 import com.microsoft.bot.schema.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,7 @@ public class ChatBot extends ActivityHandler {
 
     private final com.microsoft.bot.builder.UserState userState;
     protected final BotState conversationState;
+    protected final Dialog dialog;
     private static final String LOGIN = "Probleme mit der Anmeldung";
     private static final String SERVER = "Server-spezifische Probleme";
     private static final String PROGRAM = "Probleme mit einem unserer Programme";
@@ -36,9 +38,10 @@ public class ChatBot extends ActivityHandler {
 
     // Initializes a new instance of the "ChatBot" class.
     @Autowired
-    public ChatBot(com.microsoft.bot.builder.UserState withUserState, ConversationState withConversationState) {
+    public ChatBot(ConversationState withConversationState, UserState withUserState, Dialog withDialog) {
         userState = withUserState;
         conversationState = withConversationState;
+        dialog = withDialog;
     }
 
     @Override
@@ -85,10 +88,10 @@ public class ChatBot extends ActivityHandler {
     @Override
     protected CompletableFuture<Void> onMessageActivity(TurnContext turnContext) {
         // Get state data from UserState.
-        StatePropertyAccessor<UserState> stateAccessor =
+        StatePropertyAccessor<UserProfile> stateAccessor =
                 userState.createProperty("NewUserState");
-        CompletableFuture<UserState> stateFuture =
-                stateAccessor.get(turnContext, UserState::new);
+        CompletableFuture<UserProfile> stateFuture =
+                stateAccessor.get(turnContext, UserProfile::new);
 
         return stateFuture.thenApply(thisUserState -> {
                     // This example hard-codes specific utterances.
