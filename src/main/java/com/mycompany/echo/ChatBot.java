@@ -13,7 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This class implements the functionality of the Bot.
@@ -34,6 +35,8 @@ public class ChatBot extends ActivityHandler {
     private static final String PROGRAM = "Probleme mit einem unserer Programme";
     private static final String CONTRACT = "Vertragsanliegen";
     private static final String PROJECT = "Projekt-/Mitarbeiteranliegen";
+    public static final Pattern VALID_EMAIL_ADDRESS_REGEX =
+            Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
 
     // Initializes a new instance of the "ChatBot" class.
@@ -67,7 +70,11 @@ public class ChatBot extends ActivityHandler {
         actions.add(CONTRACT);
         actions.add(PROJECT);
 
-        List<CardAction> cardActions = actions.stream().map(this::returnNewCardAction).collect(Collectors.toList());
+        List<CardAction> cardActions = new ArrayList<>();
+        for (String action : actions) {
+            CardAction cardAction = returnNewCardAction(action);
+            cardActions.add(cardAction);
+        }
 
         card.setButtons(cardActions);
 
@@ -93,33 +100,80 @@ public class ChatBot extends ActivityHandler {
         CompletableFuture<UserProfile> stateFuture =
                 stateAccessor.get(turnContext, UserProfile::new);
 
-        return stateFuture.thenApply(thisUserState -> {
-                    // This example hard-codes specific utterances.
-                    // You should use LUIS or QnA for more advance language understanding.
-                    String text = turnContext.getActivity().getText();
-                    switch (text) {
-                        case LOGIN: return turnContext.sendActivity("[IMPLEMENTIERUNG LOGIN]");
-                        case SERVER: return onTurn(turnContext);
-                        case PROGRAM: return turnContext.sendActivity("[IMPLEMENTIERUNG PROGRAM]");
-                        case CONTRACT: return turnContext.sendActivity("[IMPLEMENTIERUNG CONTRACT]");
-                        case PROJECT: return turnContext.sendActivity("[IMPLEMENTIERUNG PROJECT]");
-                        default:
-                            return turnContext.sendActivity("Ungültige Eingabe. Bitte wählen Sie ein Anliegen aus.");
-                    }
-                })
-                // Save any state changes.
-                .thenApply(response -> userState.saveChanges(turnContext))
-                // make the return value happy.
-                .thenApply(task -> null);
+        String usereingabe = turnContext.getActivity().getText();
+
+        switch (usereingabe) {
+            case "Passwort vergessen":
+            case "Benutzername vergessen":
+                enterAnmeldeDatenVergessen(turnContext);
+            case LOGIN:
+                return enterAnmeldeProbleme(turnContext);
+            case SERVER:
+                return onTurn(turnContext);
+            case PROGRAM:
+                //return turnContext.sendActivity("[IMPLEMENTIERUNG PROGRAM]");
+            case CONTRACT:
+                //return turnContext.sendActivity("[IMPLEMENTIERUNG CONTRACT]");
+            case PROJECT:
+                //return turnContext.sendActivity("[IMPLEMENTIERUNG PROJECT]");
+            default:
+                if (mailAddressIsValid(turnContext.getActivity().getText())){
+                    turnContext.sendActivity("Es hat geklappt. Sie erhalten in Kürze eine Mail.");
+                    sendIntroCard(turnContext);
+                }
+                else{
+                    turnContext.sendActivity("Ungültige Eingabe.");
+                }
+                return null;
+            //return turnContext.sendActivity("Ungültige Eingabe. Bitte wählen Sie ein Anliegen aus.");
+        }
+    }
+
+    private CompletableFuture<Void> enterAnmeldeProbleme(TurnContext turnContext) {
+        //onTurn(turnContext);
+        String text = turnContext.getActivity().getText();
+        if (text.equals(LOGIN)) {
+            HeroCard card = new HeroCard();
+            card.setText("Bitte wählen Sie eine der folgenden Optionen: ");
+            List<String> actions = new ArrayList<>();
+            actions.add("Passwort vergessen");
+            actions.add("Benutzername vergessen");
+            List<CardAction> cardActions = new ArrayList<>();
+            for (String action : actions) {
+                CardAction cardAction = returnNewCardAction(action);
+                cardActions.add(cardAction);
+            }
+            card.setButtons(cardActions);
+
+            Activity response = MessageFactory.attachment(card.toAttachment());
+            turnContext.sendActivity(response);
+        }
+        return null;
+    }
+
+    private void enterAnmeldeDatenVergessen(TurnContext turnContext) {
+        if (turnContext.getActivity().getText().equals("Passwort vergessen")){
+            turnContext.sendActivity(MessageFactory.text("Bitte geben Sie Ihre E-Mailadresse an, mit der Sie bei uns registriert sind. " +
+                    "Sie erhalten dann in Kürze eine E-Mail zum Zurücksetzen Ihres Passworts."));
+        }
+        else{
+            turnContext.sendActivity(MessageFactory.text("Bitte geben Sie Ihre E-Mailadresse an, mit der Sie bei uns registriert sind. " +
+                    "Sie erhalten dann in Kürze eine E-Mail mit Ihren Benutzerdaten."));
+        }
     }
 
     @Override
-    public CompletableFuture<Void> onTurn(
-            TurnContext turnContext
-    ) {
+    public CompletableFuture<Void> onTurn(TurnContext turnContext) {
         return super.onTurn(turnContext)
                 .thenCompose(result -> conversationState.saveChanges(turnContext))
                 // Save any state changes that might have occurred during the turn.
                 .thenCompose(result -> userState.saveChanges(turnContext));
     }
+
+    public static boolean mailAddressIsValid(String emailStr) {
+        Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(emailStr);
+        return matcher.find();
+    }
+
+
 }

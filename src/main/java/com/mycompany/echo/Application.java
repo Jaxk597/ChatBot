@@ -55,6 +55,11 @@ public class Application extends BotDependencyConfiguration {
         return new ChatBot(conversationState, userState, dialog);
     }
 
+    @Bean
+    public Dialog getRootDialog(UserState userState) {
+        return new UserProfileDialog(userState);
+    }
+
     /**
      * Returns a custom Adapter that provides error handling.
      *
