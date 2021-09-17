@@ -107,17 +107,19 @@ public class ChatBot extends ActivityHandler {
             case SERVER:
                 return onTurn(turnContext);
             case PROGRAM:
-                //return turnContext.sendActivity("[IMPLEMENTIERUNG PROGRAM]");
+            case "Kuendigen":
+            case "Aendern/Anpassen":
+            case "Anderes":
+                enterVertragsanliegenAttributes(turnContext);
             case CONTRACT:
-                //return turnContext.sendActivity("[IMPLEMENTIERUNG CONTRACT]");
+                return enterVertragsanliegen(turnContext);
             case PROJECT:
                 //return turnContext.sendActivity("[IMPLEMENTIERUNG PROJECT]");
             default:
-                if (mailAddressIsValid(turnContext.getActivity().getText())){
+                if (mailAddressIsValid(turnContext.getActivity().getText())) {
                     turnContext.sendActivity("Es hat geklappt. Sie erhalten in Kürze eine Mail.");
                     sendIntroCard(turnContext);
-                }
-                else{
+                } else {
                     turnContext.sendActivity("Ungültige Eingabe.");
                 }
                 return null;
@@ -148,13 +150,50 @@ public class ChatBot extends ActivityHandler {
     }
 
     private void enterAnmeldeDatenVergessen(TurnContext turnContext) {
-        if (turnContext.getActivity().getText().equals("Passwort vergessen")){
+        if (turnContext.getActivity().getText().equals("Passwort vergessen")) {
             turnContext.sendActivity(MessageFactory.text("Bitte geben Sie Ihre E-Mailadresse an, mit der Sie bei uns registriert sind. " +
                     "Sie erhalten dann in Kürze eine E-Mail zum Zurücksetzen Ihres Passworts."));
-        }
-        else{
+        } else {
             turnContext.sendActivity(MessageFactory.text("Bitte geben Sie Ihre E-Mailadresse an, mit der Sie bei uns registriert sind. " +
                     "Sie erhalten dann in Kürze eine E-Mail mit Ihren Benutzerdaten."));
+        }
+    }
+
+    private CompletableFuture<Void> enterVertragsanliegen(TurnContext turnContext) {
+        //onTurn(turnContext);
+        String text = turnContext.getActivity().getText();
+        if (text.equals(CONTRACT)) {
+            HeroCard card = new HeroCard();
+            card.setText("Bitte wählen Sie eine der folgenden Optionen: ");
+            List<String> actions = new ArrayList<>();
+            actions.add("Kuendigen");
+            actions.add("Aendern/Anpassen");
+            actions.add("Anderes");
+            List<CardAction> cardActions = new ArrayList<>();
+            for (String action : actions) {
+                CardAction cardAction = returnNewCardAction(action);
+                cardActions.add(cardAction);
+            }
+            card.setButtons(cardActions);
+
+            Activity response = MessageFactory.attachment(card.toAttachment());
+            turnContext.sendActivity(response);
+        }
+        return null;
+    }
+
+
+    private void enterVertragsanliegenAttributes(TurnContext turnContext) {
+        if (turnContext.getActivity().getText().equals("Kuendigen")) {
+            turnContext.sendActivity(MessageFactory.text("Schade, dass Sie uns verlassen wollen. Hier finden Sie das Kuendigungsformular, " +
+                    "es wird anschließend an unseren Support weitergeleitet: \" +\n" +
+                    "                \"www.solutionsgmbh.de/kuendigung/sendonsave\""));
+        } else if (turnContext.getActivity().getText().equals("Aendern/Anpassen")) {
+            turnContext.sendActivity(MessageFactory.text("Sie können Sie Ihre Vertagsdatenändern. Ihre ID lautet: 1191112. " +
+                    " \" www.solutionsgmbh.de/changeContractData"));
+        } else if (turnContext.getActivity().getText().equals("Anderes")) {
+            turnContext.sendActivity(MessageFactory.text("Danke fuer Ihre Kontaktaufnahme: Ihre Ticketnummer lauter: 89868290. " +
+                    " Ein Mitarbeiter wird Sie kontaktieren. "));
         }
     }
 
