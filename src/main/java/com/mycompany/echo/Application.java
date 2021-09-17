@@ -49,7 +49,7 @@ public class Application extends BotDependencyConfiguration {
      */
     @Bean
     public Bot getBot() {
-        return new EchoBot();
+        return new ChatBot();
     }
 
     /**
