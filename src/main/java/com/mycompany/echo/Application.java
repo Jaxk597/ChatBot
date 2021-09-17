@@ -12,6 +12,7 @@ import com.microsoft.bot.integration.Configuration;
 import com.microsoft.bot.integration.spring.BotController;
 import com.microsoft.bot.integration.spring.BotDependencyConfiguration;
 import org.springframework.boot.SpringApplication;
+import com.microsoft.bot.dialogs.Dialog;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -50,8 +51,13 @@ public class Application extends BotDependencyConfiguration {
      * @return The Bot implementation for this application.
      */
     @Bean
-    public Bot getBot(UserState userState, ConversationState conversationState) {
-        return new ChatBot(userState, conversationState);
+    public Bot getBot(UserState userState, ConversationState conversationState, Dialog dialog) {
+        return new ChatBot(userState, conversationState, dialog);
+    }
+
+    @Bean
+    public Dialog getRootDialog(UserState userState) {
+        return new UserProfileDialog(userState);
     }
 
     /**

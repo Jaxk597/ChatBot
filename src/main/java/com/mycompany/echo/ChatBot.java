@@ -5,6 +5,7 @@ package com.mycompany.echo;
 
 import com.codepoetics.protonpack.collectors.CompletableFutures;
 import com.microsoft.bot.builder.*;
+import com.microsoft.bot.dialogs.Dialog;
 import com.microsoft.bot.schema.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,7 @@ public class ChatBot extends ActivityHandler {
 
     private final com.microsoft.bot.builder.UserState userState;
     protected final BotState conversationState;
+    private final Dialog dialog;
     private static final String LOGIN = "Probleme mit der Anmeldung";
     private static final String SERVER = "Server-spezifische Probleme";
     private static final String PROGRAM = "Probleme mit einem unserer Programme";
@@ -38,9 +40,10 @@ public class ChatBot extends ActivityHandler {
 
 
     @Autowired
-    public ChatBot(com.microsoft.bot.builder.UserState withUserState, ConversationState withConversationState) {
+    public ChatBot(com.microsoft.bot.builder.UserState withUserState, ConversationState withConversationState, Dialog withDialog) {
         userState = withUserState;
         conversationState = withConversationState;
+        dialog = withDialog;
     }
 
     @Override
