@@ -26,6 +26,9 @@ public class Problems {
     private static final String CONTRACT = "Vertragsanliegen";
     private static final String PROJECT = "Projekt-/Mitarbeiteranliegen";
     private static final String MITARBEITER = "Mitarbeiteranliegen";
+    private static final String MITARBEITER2 = "Mit Mitarbeiter Reden";
+    private static final String MITARBEITER3 = "Einen Mitarbeiter loben/bescherde einreichen";
+
 
 
     private int control = 0;
@@ -42,26 +45,7 @@ public class Problems {
     }
 
 
-    // INTRO
-    CompletableFuture<ResourceResponse> sendIntroCard(TurnContext turnContext) {
-        HeroCard card = new HeroCard();
-        card.setTitle("Willkommen im Kunden-Chatsupport!");
-        card.setText("Hallo! Ich unterstütze Sie bei support-spezifischen Fragen. Welches Anliegen haben Sie?");
 
-        List<String> actions = new ArrayList<>();
-        actions.add(LOGIN);
-        actions.add(SERVER);
-        actions.add(PROGRAM);
-        actions.add(CONTRACT);
-        actions.add(PROJECT);
-        actions.add(MITARBEITER);
-        List<CardAction> cardActions = actions.stream().map(this::returnNewCardAction).collect(Collectors.toList());
-
-        card.setButtons(cardActions);
-
-        Activity response = MessageFactory.attachment(card.toAttachment());
-        return turnContext.sendActivity(response);
-    }
 
     //Mitarbeiter END Card
     protected CompletableFuture<ResourceResponse> sendOtherCard(TurnContext turnContext) {
@@ -98,27 +82,16 @@ public class Problems {
                 "Sie können..."
         );
 
-        CardImage image = new CardImage();
-        image.setUrl("https://aka.ms/bf-welcome-card-image");
 
-        card.setImages(Collections.singletonList(image));
-
-        CardAction talkAction = new CardAction();
-        talkAction.setType(ActionTypes.MESSAGE_BACK);
-        talkAction.setTitle("Mit Mitarbeiter Reden");
-        talkAction.setText("ander");
-        talkAction.setDisplayText("Mit Mitarbeiter Reden");
-        talkAction.setValue("ander");
-
-        CardAction lobAction = new CardAction();
-        lobAction.setType(ActionTypes.MESSAGE_BACK);
-        lobAction.setTitle("Einen Mitarbeiter loben/bescherde einreichen");
-        lobAction.setText("Rueckmeldung1");
-        lobAction.setDisplayText("Einen Mitarbeiter loben/bescherde einreichen");
-        lobAction.setValue("Rueckmeldung1");
-
-        card.setButtons(Arrays.asList(talkAction, lobAction));
-
+        List<String> actions = new ArrayList<>();
+        actions.add(MITARBEITER2);
+        actions.add(MITARBEITER3);
+        List<CardAction> cardActions = new ArrayList<>();
+        for (String action : actions) {
+            CardAction cardAction = returnNewCardAction(action);
+            cardActions.add(cardAction);
+        }
+        card.setButtons(cardActions);
         Activity response = MessageFactory.attachment(card.toAttachment());
         return turnContext.sendActivity(response);
     }

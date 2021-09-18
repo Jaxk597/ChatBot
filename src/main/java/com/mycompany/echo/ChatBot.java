@@ -23,19 +23,28 @@ import java.util.stream.Collectors;
  * #onMembersAdded(List, TurnContext)} will send a greeting to new conversation participants.
  * </p>
  */
-public class ChatBot extends ActivityHandler {
-
+    public class ChatBot extends ActivityHandler {
+    protected final BotState conversationState;
     private int control = 0;
-
+    private final com.microsoft.bot.builder.UserState userState;
     private static final String LOGIN = "Probleme mit der Anmeldung";
     private static final String SERVER = "Server-spezifische Probleme";
     private static final String PROGRAM = "Probleme mit einem unserer Programme";
     private static final String CONTRACT = "Vertragsanliegen";
     private static final String PROJECT = "Projekt-/Mitarbeiteranliegen";
     private static final String MITARBEITER = "Mitarbeiteranliegen";
+    private static final String ANDERES = "Anderes Problem";
 
 
     Problems problems = new Problems();
+
+    @Autowired
+    public ChatBot(com.microsoft.bot.builder.UserState withUserState, ConversationState withConversationState) {
+        userState = withUserState;
+        conversationState = withConversationState;
+    }
+
+
 
 //    @Override
 //    protected CompletableFuture<Void> onMessageActivity(TurnContext turnContext) {
@@ -161,7 +170,7 @@ public class ChatBot extends ActivityHandler {
                         case CONTRACT: return turnContext.sendActivity("[IMPLEMENTIERUNG CONTRACT]");
                         case PROJECT: return turnContext.sendActivity("[IMPLEMENTIERUNG PROJECT]");
                         case MITARBEITER: return problems.sendWorkerCard(turnContext);
-
+                        case ANDERES: return turnContext.sendActivity("[IMPLEMENTIERUNG PROJECT]");
                         default:
                             return turnContext.sendActivity("Ungültige Eingabe. Bitte wählen Sie ein Anliegen aus.");
                     }
@@ -182,7 +191,45 @@ public class ChatBot extends ActivityHandler {
                 .filter(
                         member -> !StringUtils
                                 .equals(member.getId(), turnContext.getActivity().getRecipient().getId())
-                ).map(channel -> problems.sendIntroCard(turnContext))
+                ).map(channel -> sendIntroCard(turnContext))
                 .collect(CompletableFutures.toFutureList()).thenApply(resourceResponses -> null);
     }
+
+    // INTRO
+    CompletableFuture<ResourceResponse> sendIntroCard(TurnContext turnContext) {
+        HeroCard card = new HeroCard();
+        card.setTitle("Willkommen im Kunden-Chatsupport!");
+        card.setText("Hallo! Ich unterstütze Sie bei support-spezifischen Fragen. Welches Anliegen haben Sie?");
+
+        List<String> actions = new ArrayList<>();
+        actions.add(LOGIN);
+        actions.add(SERVER);
+        actions.add(PROGRAM);
+        actions.add(CONTRACT);
+        actions.add(PROJECT);
+        actions.add(MITARBEITER);
+        actions.add(ANDERES);
+        List<CardAction> cardActions = new ArrayList<>();
+        for (String action : actions) {
+            CardAction cardAction = returnNewCardAction(action);
+            cardActions.add(cardAction);
+        }
+        card.setButtons(cardActions);
+        Activity response = MessageFactory.attachment(card.toAttachment());
+        return turnContext.sendActivity(response);
+    }
+
+
+    //ALlgemeiner Header für CardActions... sehr vereinfacht und übersichtlich gemacht
+    private CardAction returnNewCardAction(String type) {
+        CardAction action = new CardAction();
+        action.setType(ActionTypes.MESSAGE_BACK);
+        action.setTitle(type);
+        action.setText(type);
+        action.setDisplayText(type);
+        action.setValue(type);
+        return action;
+    }
+
+
 }
