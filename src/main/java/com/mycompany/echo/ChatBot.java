@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -25,7 +26,6 @@ import java.util.stream.Collectors;
  */
     public class ChatBot extends ActivityHandler {
     protected final BotState conversationState;
-    private int control = 0;
     private final com.microsoft.bot.builder.UserState userState;
     private static final String LOGIN = "Probleme mit der Anmeldung";
     private static final String SERVER = "Server-spezifische Probleme";
@@ -33,8 +33,11 @@ import java.util.stream.Collectors;
     private static final String CONTRACT = "Vertragsanliegen";
     private static final String PROJECT = "Projekt-/Mitarbeiteranliegen";
     private static final String MITARBEITER = "Mitarbeiteranliegen";
+    private static final String MITARBEITER2 = "Mit Mitarbeiter Reden";
+    private static final String MITARBEITER3 = "Einen Mitarbeiter loben/bescherde einreichen";
     private static final String ANDERES = "Anderes Problem";
-
+    public static final Pattern VALID_EMAIL_ADDRESS_REGEX =
+            Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
     Problems problems = new Problems();
 
@@ -43,106 +46,6 @@ import java.util.stream.Collectors;
         userState = withUserState;
         conversationState = withConversationState;
     }
-
-
-
-//    @Override
-//    protected CompletableFuture<Void> onMessageActivity(TurnContext turnContext) {
-//        String text = turnContext.getActivity().getText().toLowerCase();
-//
-//        if (problems.getControl() == 100) {
-//            return turnContext
-//                    .sendActivity(MessageFactory.text(""))
-//                    .thenCompose(response -> problems.sendResponseAnswerCard(turnContext))
-//                    .thenApply(result -> null);
-//        }
-//
-//        //Papers Please!
-//        if (problems.getControl() == 597) {
-//            return turnContext
-//                    .sendActivity(MessageFactory.text(""))
-//                    .thenCompose(response -> problems.sendIdCard(turnContext))
-//                    .thenApply(result -> null);
-//        }
-//
-//        if (text.equals("145213571892")) {
-//            return turnContext
-//                    .sendActivity(MessageFactory.text("Hehe i am so smart boyo"))
-//                    .thenCompose(response -> problems.sendEndCard(turnContext))
-//                    .thenApply(result -> null);
-//        }
-//
-//        if (text.equals("rueckmeldung1")) {
-//            return turnContext
-//                    .sendActivity(MessageFactory.text("Schreiben sie hier einfach ihre Rückmeldung, wir leiten sie daraufhin an unseren Mitarbeiter weiter"))
-//                    .thenCompose(response -> problems.sendAnswerCard(turnContext))
-//                    .thenApply(sendResult -> null);
-//        }
-//        //Mitarbeiterproblem
-//        if (text.matches(".*arbeiter.*")) {
-//            return turnContext.sendActivity(
-//                            MessageFactory.text("Mitarbeiterproblem"))
-//                    .thenCompose(response -> problems.sendWorkerCard(turnContext))
-//                    .thenApply(sendResult -> null);
-//        }
-//        // Anders Problem / Mit Mitarbeiter Sprechen
-//        if (text.matches(".*sprech.*")
-//                || text.matches(".*ander.*")) {
-//            return turnContext
-//                    .sendActivity(MessageFactory.text(""))
-//                    .thenCompose(response -> problems.sendOtherCard(turnContext))
-//                    .thenCompose(response -> problems.sendEndCard(turnContext))
-//                    .thenApply(result -> null);
-//        }
-//
-//        // ECHOOOOOOOO
-//        return turnContext.sendActivity(
-//                MessageFactory.text("Echo: " + turnContext.getActivity().getText())
-//        ).thenApply(sendResult -> null);
-//    }
-
-
-
-
-    //copy paste "
-
-
-
-//    @Override
-//    public CompletableFuture<Void> onTurn(
-//            TurnContext turnContext
-//    ) {
-//        return super.onTurn(turnContext)
-//                .thenCompose(result -> conversationState.saveChanges(turnContext))
-//                // Save any state changes that might have occurred during the turn.
-//                .thenCompose(result -> userState.saveChanges(turnContext));
-//    }
-//}
-
-
-//    @Override
-//    public CompletableFuture<Void> onWorker(
-//            TurnContext turnContext
-//    ) {
-//          return super.onWorker(turnContext)
-//              .sendActivity(MessageFactory.text(""))
-//              .thenCompose(response -> problems.sendOtherCard(turnContext))
-//              .thenCompose(response -> problems.sendEndCard(turnContext))
-//              .thenApply(result -> null);
-//    }
-
-
-
-
-// ---------------------------------------------------------------------------------------------------------------------
-    // COPY PASTE"          DAS DARUNTER NOCH ENTFERNEN KAPPA
-// ---------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-
-
-//public class ChatBot extends ActivityHandler {
-//
-
 
 
 //
@@ -159,7 +62,10 @@ import java.util.stream.Collectors;
 
 //                stateFuture
                         .thenApply(thisUserState -> {
-
+                    if (problems.getControl() == 100){
+                        problems.setControl(0);
+                        return problems.sendResponseAnswerCard(turnContext);
+                    }
                     // This example hard-codes specific utterances.
                     // You should use LUIS or QnA for more advance language understanding.
                     String text = turnContext.getActivity().getText();
@@ -170,7 +76,9 @@ import java.util.stream.Collectors;
                         case CONTRACT: return turnContext.sendActivity("[IMPLEMENTIERUNG CONTRACT]");
                         case PROJECT: return turnContext.sendActivity("[IMPLEMENTIERUNG PROJECT]");
                         case MITARBEITER: return problems.sendWorkerCard(turnContext);
-                        case ANDERES: return turnContext.sendActivity("[IMPLEMENTIERUNG PROJECT]");
+                        case MITARBEITER2: return problems.sendOtherCard(turnContext);
+                        case MITARBEITER3: return problems.sendAnswerCard(turnContext);
+                        case ANDERES: return problems.sendOtherCard(turnContext);
                         default:
                             return turnContext.sendActivity("Ungültige Eingabe. Bitte wählen Sie ein Anliegen aus.");
                     }
@@ -233,3 +141,104 @@ import java.util.stream.Collectors;
 
 
 }
+
+
+
+
+
+//    @Override
+//    protected CompletableFuture<Void> onMessageActivity(TurnContext turnContext) {
+//        String text = turnContext.getActivity().getText().toLowerCase();
+//
+//        if (problems.getControl() == 100) {
+//            return turnContext
+//                    .sendActivity(MessageFactory.text(""))
+//                    .thenCompose(response -> problems.sendResponseAnswerCard(turnContext))
+//                    .thenApply(result -> null);
+//        }
+//
+//        //Papers Please!
+//        if (problems.getControl() == 597) {
+//            return turnContext
+//                    .sendActivity(MessageFactory.text(""))
+//                    .thenCompose(response -> problems.sendIdCard(turnContext))
+//                    .thenApply(result -> null);
+//        }
+//
+//        if (text.equals("145213571892")) {
+//            return turnContext
+//                    .sendActivity(MessageFactory.text("Hehe i am so smart boyo"))
+//                    .thenCompose(response -> problems.sendEndCard(turnContext))
+//                    .thenApply(result -> null);
+//        }
+//
+//        if (text.equals("rueckmeldung1")) {
+//            return turnContext
+//                    .sendActivity(MessageFactory.text("Schreiben sie hier einfach ihre Rückmeldung, wir leiten sie daraufhin an unseren Mitarbeiter weiter"))
+//                    .thenCompose(response -> problems.sendAnswerCard(turnContext))
+//                    .thenApply(sendResult -> null);
+//        }
+//        //Mitarbeiterproblem
+//        if (text.matches(".*arbeiter.*")) {
+//            return turnContext.sendActivity(
+//                            MessageFactory.text("Mitarbeiterproblem"))
+//                    .thenCompose(response -> problems.sendWorkerCard(turnContext))
+//                    .thenApply(sendResult -> null);
+//        }
+//        // Anders Problem / Mit Mitarbeiter Sprechen
+//        if (text.matches(".*sprech.*")
+//                || text.matches(".*ander.*")) {
+//            return turnContext
+//                    .sendActivity(MessageFactory.text(""))
+//                    .thenCompose(response -> problems.sendOtherCard(turnContext))
+//                    .thenCompose(response -> problems.sendEndCard(turnContext))
+//                    .thenApply(result -> null);
+//        }
+//
+//        // ECHOOOOOOOO
+//        return turnContext.sendActivity(
+//                MessageFactory.text("Echo: " + turnContext.getActivity().getText())
+//        ).thenApply(sendResult -> null);
+//    }
+
+
+
+
+//copy paste "
+
+
+
+//    @Override
+//    public CompletableFuture<Void> onTurn(
+//            TurnContext turnContext
+//    ) {
+//        return super.onTurn(turnContext)
+//                .thenCompose(result -> conversationState.saveChanges(turnContext))
+//                // Save any state changes that might have occurred during the turn.
+//                .thenCompose(result -> userState.saveChanges(turnContext));
+//    }
+//}
+
+
+//    @Override
+//    public CompletableFuture<Void> onWorker(
+//            TurnContext turnContext
+//    ) {
+//          return super.onWorker(turnContext)
+//              .sendActivity(MessageFactory.text(""))
+//              .thenCompose(response -> problems.sendOtherCard(turnContext))
+//              .thenCompose(response -> problems.sendEndCard(turnContext))
+//              .thenApply(result -> null);
+//    }
+
+
+
+
+// ---------------------------------------------------------------------------------------------------------------------
+// COPY PASTE"          DAS DARUNTER NOCH ENTFERNEN KAPPA
+// ---------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+
+
+//public class ChatBot extends ActivityHandler {
+//

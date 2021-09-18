@@ -30,7 +30,6 @@ public class Problems {
     private static final String MITARBEITER3 = "Einen Mitarbeiter loben/bescherde einreichen";
 
 
-
     private int control = 0;
 
 
@@ -75,7 +74,6 @@ public class Problems {
 
     //Dialog für Mitarbeiter
     protected CompletableFuture<ResourceResponse> sendWorkerCard(TurnContext turnContext) {
-        control = 1;
         HeroCard card = new HeroCard();
         card.setTitle("Probleme mit unseren Mitarbeitern?");
         card.setText(
@@ -103,8 +101,7 @@ public class Problems {
         return turnContext.sendActivity(response);
     }
 
-
-    // Für die Antwort auf die Rückmeldung / Noch in Datei Schreiben Lassen!!!
+    // Für die Antwort auf die Rückmeldung
     protected CompletableFuture<ResourceResponse> sendResponseAnswerCard(TurnContext turnContext) {
         Writer fileWriter;
         File file;
