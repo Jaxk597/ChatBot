@@ -9,23 +9,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+
 
 
 public class Problems {
 
-    //    private final com.microsoft.bot.builder.UserState userState;
-//    protected final BotState conversationState;
-    private static final String LOGIN = "Probleme mit der Anmeldung";
-    private static final String SERVER = "Server-spezifische Probleme";
-    private static final String PROGRAM = "Probleme mit einem unserer Programme";
-    private static final String CONTRACT = "Vertragsanliegen";
-    private static final String PROJECT = "Projekt-/Mitarbeiteranliegen";
-    private static final String MITARBEITER = "Mitarbeiteranliegen";
     private static final String MITARBEITER2 = "Mit Mitarbeiter Reden";
     private static final String MITARBEITER3 = "Einen Mitarbeiter loben/bescherde einreichen";
 
@@ -61,7 +52,7 @@ public class Problems {
 
 
 
-    //Standard END Card
+    //Standard END Card /UNSUSED
     protected CompletableFuture<ResourceResponse> sendEndCard(TurnContext turnContext) {
         HeroCard card = new HeroCard();
         card.setTitle("Vielen Dank");

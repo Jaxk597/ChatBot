@@ -9,11 +9,11 @@ import com.microsoft.bot.schema.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.*;
+
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+
 
 /**
  * This class implements the functionality of the Bot.
