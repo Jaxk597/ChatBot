@@ -20,4 +20,7 @@ package com.mycompany.echo;
  * @see ChatBot
  */
 public class UserProfile {
+public String problemType;
+public String customerNo;
+public String project;
 }

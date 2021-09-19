@@ -11,10 +11,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * This class implements the functionality of the Bot.
@@ -35,6 +37,12 @@ public class ChatBot extends ActivityHandler {
     private static final String PROGRAM = "Probleme mit einem unserer Programme";
     private static final String CONTRACT = "Vertragsanliegen";
     private static final String PROJECT = "Projekt-/Mitarbeiteranliegen";
+    private static final String PASSWORD = "Passwort vergessen";
+    private static final String USERNAME = "Benutzername vergessen";
+    private static final String OTHER = "Anderes Problem";
+    private static final String REPLY_OTHER = "Bitte wenden Sie sich bei komplexeren Anliegen direkt an einen unserer Mitarbeiter.\n" +
+            "Telefonisch werktags von 8 - 20 Uhr: 0221 - 6392678\n" +
+            "oder per E-Mail an: support@itech-bs14.de";
     public static final Pattern VALID_EMAIL_ADDRESS_REGEX =
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
@@ -63,18 +71,9 @@ public class ChatBot extends ActivityHandler {
         card.setTitle("Willkommen im Kunden-Chatsupport!");
         card.setText("Hallo! Ich unterstütze Sie bei support-spezifischen Fragen. Welches Anliegen haben Sie?");
 
-        List<String> actions = new ArrayList<>();
-        actions.add(LOGIN);
-        actions.add(SERVER);
-        actions.add(PROGRAM);
-        actions.add(CONTRACT);
-        actions.add(PROJECT);
+        List<String> actions = Arrays.asList(LOGIN, SERVER, PROGRAM, CONTRACT, PROJECT, OTHER);
 
-        List<CardAction> cardActions = new ArrayList<>();
-        for (String action : actions) {
-            CardAction cardAction = returnNewCardAction(action);
-            cardActions.add(cardAction);
-        }
+        List<CardAction> cardActions = actions.stream().map(this::returnNewCardAction).collect(Collectors.toList());
 
         card.setButtons(cardActions);
 
@@ -94,80 +93,76 @@ public class ChatBot extends ActivityHandler {
 
     @Override
     protected CompletableFuture<Void> onMessageActivity(TurnContext turnContext) {
-        // Get state data from UserState.
-        StatePropertyAccessor<UserProfile> stateAccessor =
-                userState.createProperty("NewUserState");
-        CompletableFuture<UserProfile> stateFuture =
-                stateAccessor.get(turnContext, UserProfile::new);
 
-        String usereingabe = turnContext.getActivity().getText();
+        String userInput = turnContext.getActivity().getText();
 
-        switch (usereingabe) {
-            case "Passwort vergessen":
-            case "Benutzername vergessen":
-                enterAnmeldeDatenVergessen(turnContext);
-            case LOGIN:
-                return enterAnmeldeProbleme(turnContext);
+        switch (userInput) {
+            case LOGIN: {
+                return onLoginProblems(turnContext);
+            }
+            case PASSWORD:
+            case USERNAME:
+                return onLoginProblems(turnContext, userInput);
             case SERVER:
-                return onTurn(turnContext);
+                return onServerProblems(turnContext);
             case PROGRAM:
-                //return turnContext.sendActivity("[IMPLEMENTIERUNG PROGRAM]");
+                return turnContext.sendActivity("[IMPLEMENTIERUNG PROGRAM]").thenApply(result -> null);
             case CONTRACT:
-                //return turnContext.sendActivity("[IMPLEMENTIERUNG CONTRACT]");
+                return turnContext.sendActivity("[IMPLEMENTIERUNG CONTRACT]").thenApply(result -> null);
             case PROJECT:
-                //return turnContext.sendActivity("[IMPLEMENTIERUNG PROJECT]");
+                return turnContext.sendActivity("[IMPLEMENTIERUNG PROJECT]").thenApply(result -> null);
+            case OTHER:
+                return turnContext.sendActivity(REPLY_OTHER).thenApply(result -> null);
             default:
-                if (mailAddressIsValid(turnContext.getActivity().getText())){
-                    turnContext.sendActivity("Es hat geklappt. Sie erhalten in Kürze eine Mail.");
-                    sendIntroCard(turnContext);
-                }
-                else{
+                if (userInput.contains("@") && mailAddressIsValid(userInput)) {
+                    turnContext.sendActivity("Vielen Dank! Bitte überprüfen Sie Ihr E-Mail-Postfach.");
+                } else if(userInput.contains("1234")) {
+                    onServerProblems(turnContext);
+                } else {
                     turnContext.sendActivity("Ungültige Eingabe.");
                 }
                 return null;
-            //return turnContext.sendActivity("Ungültige Eingabe. Bitte wählen Sie ein Anliegen aus.");
         }
     }
 
-    private CompletableFuture<Void> enterAnmeldeProbleme(TurnContext turnContext) {
-        //onTurn(turnContext);
-        String text = turnContext.getActivity().getText();
-        if (text.equals(LOGIN)) {
-            HeroCard card = new HeroCard();
-            card.setText("Bitte wählen Sie eine der folgenden Optionen: ");
-            List<String> actions = new ArrayList<>();
-            actions.add("Passwort vergessen");
-            actions.add("Benutzername vergessen");
-            List<CardAction> cardActions = new ArrayList<>();
-            for (String action : actions) {
-                CardAction cardAction = returnNewCardAction(action);
-                cardActions.add(cardAction);
-            }
-            card.setButtons(cardActions);
+    private CompletableFuture<Void> onLoginProblems(TurnContext turnContext) {
 
-            Activity response = MessageFactory.attachment(card.toAttachment());
-            turnContext.sendActivity(response);
-        }
-        return null;
+        Activity reply = MessageFactory.text("Bitte wählen Sie Ihr Problem: ");
+
+        CardAction passwordAction = new CardAction();
+        passwordAction.setTitle(PASSWORD);
+        passwordAction.setType(ActionTypes.IM_BACK);
+        passwordAction.setValue(PASSWORD);
+
+        CardAction usernameAction = new CardAction();
+        usernameAction.setTitle(USERNAME);
+        usernameAction.setType(ActionTypes.IM_BACK);
+        usernameAction.setValue(USERNAME);
+
+        SuggestedActions actions = new SuggestedActions();
+        actions.setActions(Arrays.asList(passwordAction, usernameAction));
+        reply.setSuggestedActions(actions);
+        return turnContext.sendActivity(reply).thenApply(sendResult -> null);
     }
 
-    private void enterAnmeldeDatenVergessen(TurnContext turnContext) {
-        if (turnContext.getActivity().getText().equals("Passwort vergessen")){
-            turnContext.sendActivity(MessageFactory.text("Bitte geben Sie Ihre E-Mailadresse an, mit der Sie bei uns registriert sind. " +
-                    "Sie erhalten dann in Kürze eine E-Mail zum Zurücksetzen Ihres Passworts."));
-        }
-        else{
-            turnContext.sendActivity(MessageFactory.text("Bitte geben Sie Ihre E-Mailadresse an, mit der Sie bei uns registriert sind. " +
-                    "Sie erhalten dann in Kürze eine E-Mail mit Ihren Benutzerdaten."));
+    private CompletableFuture<Void> onLoginProblems(TurnContext turnContext, String text) {
+
+        switch (text) {
+            case PASSWORD:
+                return turnContext.sendActivity("Bitte geben Sie Ihre E-Mailadresse an, mit der Sie bei uns registriert sind. " +
+                        "Sie erhalten dann in Kürze eine E-Mail zum Zurücksetzen Ihres Passworts.").thenApply(result -> null);
+            case USERNAME:
+                return turnContext.sendActivity("Bitte geben Sie Ihre E-Mailadresse an, mit der Sie bei uns registriert sind. " +
+                        "Sie erhalten dann in Kürze eine E-Mail mit Ihren Benutzerdaten.").thenApply(result -> null);
+            case OTHER:
+                return turnContext.sendActivity(REPLY_OTHER).thenApply(r -> null);
+            default:
+                return turnContext.sendActivity("Ungültige Eingabe.").thenApply(r -> null);
         }
     }
 
-    @Override
-    public CompletableFuture<Void> onTurn(TurnContext turnContext) {
-        return super.onTurn(turnContext)
-                .thenCompose(result -> conversationState.saveChanges(turnContext))
-                // Save any state changes that might have occurred during the turn.
-                .thenCompose(result -> userState.saveChanges(turnContext));
+    public CompletableFuture<Void> onServerProblems(TurnContext turnContext) {
+        return Dialog.run(dialog, turnContext, conversationState.createProperty("DialogState"));
     }
 
     public static boolean mailAddressIsValid(String emailStr) {
@@ -175,5 +170,13 @@ public class ChatBot extends ActivityHandler {
         return matcher.find();
     }
 
-
+    @Override
+    public CompletableFuture<Void> onTurn(
+            TurnContext turnContext
+    ) {
+        return super.onTurn(turnContext)
+                // Save any state changes that might have occurred during the turn.
+                .thenCompose(result -> conversationState.saveChanges(turnContext))
+                .thenCompose(result -> userState.saveChanges(turnContext));
+    }
 }
