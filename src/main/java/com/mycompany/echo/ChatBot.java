@@ -49,7 +49,7 @@ public class ChatBot extends ActivityHandler {
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
     private static final String MITARBEITER2 = "Mit Mitarbeiter Reden";
     private static final String MITARBEITER3 = "Einen Mitarbeiter loben/bescherde einreichen";
-    private static final String MITARBEITER4 = "Rückmeldung Senden";
+
 
 
     Problems problems = new Problems();
@@ -130,8 +130,6 @@ public class ChatBot extends ActivityHandler {
                 return problems.sendOtherCard(turnContext).thenApply(result -> null);
             case MITARBEITER3:
                 return problems.sendAnswerCard(turnContext).thenApply(result -> null);
-            case MITARBEITER4:
-                return problems.sendResponseAnswerCard(turnContext).thenApply(result -> null);
             default:
                 if (isValidMailAddress(userInput)) {
                     turnContext.sendActivity("Vielen Dank! Bitte überprüfen Sie Ihr E-Mail-Postfach.");
@@ -141,6 +139,8 @@ public class ChatBot extends ActivityHandler {
                         turnContext.sendActivity("Vielen Dank! Bitte überprüfen Sie Ihr E-Mail-Postfach.");
                     } else if (userInput.contains("1234")) {
                         onServerProblems(turnContext);
+                    } else if (problems.getControl() == 100) {
+                        return problems.sendResponseAnswerCard(turnContext).thenApply(result -> null);
                     } else {
                         turnContext.sendActivity("Ungültige Eingabe.");
                     }
