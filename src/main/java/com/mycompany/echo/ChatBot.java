@@ -120,15 +120,16 @@ public class ChatBot extends ActivityHandler {
                     turnContext.sendActivity("Es hat geklappt. Sie erhalten in Kürze eine Mail.");
                     sendIntroCard(turnContext);
                 } else {
-                if (userInput.contains("@") && mailAddressIsValid(userInput)) {
-                    turnContext.sendActivity("Vielen Dank! Bitte überprüfen Sie Ihr E-Mail-Postfach.");
-                } else if(userInput.contains("1234")) {
-                    onServerProblems(turnContext);
-                } else {
-                    turnContext.sendActivity("Ungültige Eingabe.");
+                    if (userInput.contains("@") && mailAddressIsValid(userInput)) {
+                        turnContext.sendActivity("Vielen Dank! Bitte überprüfen Sie Ihr E-Mail-Postfach.");
+                    } else if (userInput.contains("1234")) {
+                        onServerProblems(turnContext);
+                    } else {
+                        turnContext.sendActivity("Ungültige Eingabe.");
+                    }
                 }
-                return null;
         }
+        return null;
     }
 
     private CompletableFuture<Void> onLoginProblems(TurnContext turnContext) {
@@ -209,8 +210,7 @@ public class ChatBot extends ActivityHandler {
             turnContext.sendActivity(MessageFactory.text("Sie können Sie Ihre Vertagsdatenändern. Ihre ID lautet: 1191112. " +
                     " \" www.solutionsgmbh.de/changeContractData"));
         } else if (turnContext.getActivity().getText().equals("Anderes")) {
-            turnContext.sendActivity(MessageFactory.text("Danke fuer Ihre Kontaktaufnahme: Ihre Ticketnummer lauter: 89868290. " +
-                    " Ein Mitarbeiter wird Sie kontaktieren. "));
+            turnContext.sendActivity(REPLY_OTHER);
         }
     }
 
