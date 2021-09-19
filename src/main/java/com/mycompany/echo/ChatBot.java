@@ -47,7 +47,6 @@ public class ChatBot extends ActivityHandler {
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
 
-    // Initializes a new instance of the "ChatBot" class.
     @Autowired
     public ChatBot(ConversationState withConversationState, UserState withUserState, Dialog withDialog) {
         userState = withUserState;
@@ -106,14 +105,21 @@ public class ChatBot extends ActivityHandler {
             case SERVER:
                 return onServerProblems(turnContext);
             case PROGRAM:
-                return turnContext.sendActivity("[IMPLEMENTIERUNG PROGRAM]").thenApply(result -> null);
+            case "Kuendigen":
+            case "Aendern/Anpassen":
+            case "Anderes":
+                enterVertragsanliegenAttributes(turnContext);
             case CONTRACT:
-                return turnContext.sendActivity("[IMPLEMENTIERUNG CONTRACT]").thenApply(result -> null);
+                return enterVertragsanliegen(turnContext);
             case PROJECT:
                 return turnContext.sendActivity("[IMPLEMENTIERUNG PROJECT]").thenApply(result -> null);
             case OTHER:
                 return turnContext.sendActivity(REPLY_OTHER).thenApply(result -> null);
             default:
+                if (mailAddressIsValid(turnContext.getActivity().getText())) {
+                    turnContext.sendActivity("Es hat geklappt. Sie erhalten in Kürze eine Mail.");
+                    sendIntroCard(turnContext);
+                } else {
                 if (userInput.contains("@") && mailAddressIsValid(userInput)) {
                     turnContext.sendActivity("Vielen Dank! Bitte überprüfen Sie Ihr E-Mail-Postfach.");
                 } else if(userInput.contains("1234")) {
@@ -168,6 +174,44 @@ public class ChatBot extends ActivityHandler {
     public static boolean mailAddressIsValid(String emailStr) {
         Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(emailStr);
         return matcher.find();
+    }
+
+    private CompletableFuture<Void> enterVertragsanliegen(TurnContext turnContext) {
+        //onTurn(turnContext);
+        String text = turnContext.getActivity().getText();
+        if (text.equals(CONTRACT)) {
+            HeroCard card = new HeroCard();
+            card.setText("Bitte wählen Sie eine der folgenden Optionen: ");
+            List<String> actions = new ArrayList<>();
+            actions.add("Kuendigen");
+            actions.add("Aendern/Anpassen");
+            actions.add("Anderes");
+            List<CardAction> cardActions = new ArrayList<>();
+            for (String action : actions) {
+                CardAction cardAction = returnNewCardAction(action);
+                cardActions.add(cardAction);
+            }
+            card.setButtons(cardActions);
+
+            Activity response = MessageFactory.attachment(card.toAttachment());
+            turnContext.sendActivity(response);
+        }
+        return null;
+    }
+
+
+    private void enterVertragsanliegenAttributes(TurnContext turnContext) {
+        if (turnContext.getActivity().getText().equals("Kuendigen")) {
+            turnContext.sendActivity(MessageFactory.text("Schade, dass Sie uns verlassen wollen. Hier finden Sie das Kuendigungsformular, " +
+                    "es wird anschließend an unseren Support weitergeleitet: \" +\n" +
+                    "                \"www.solutionsgmbh.de/kuendigung/sendonsave\""));
+        } else if (turnContext.getActivity().getText().equals("Aendern/Anpassen")) {
+            turnContext.sendActivity(MessageFactory.text("Sie können Sie Ihre Vertagsdatenändern. Ihre ID lautet: 1191112. " +
+                    " \" www.solutionsgmbh.de/changeContractData"));
+        } else if (turnContext.getActivity().getText().equals("Anderes")) {
+            turnContext.sendActivity(MessageFactory.text("Danke fuer Ihre Kontaktaufnahme: Ihre Ticketnummer lauter: 89868290. " +
+                    " Ein Mitarbeiter wird Sie kontaktieren. "));
+        }
     }
 
     @Override
