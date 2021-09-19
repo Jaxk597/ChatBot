@@ -18,6 +18,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.regex.Pattern;
+
+
 /**
  * This class implements the functionality of the Bot.
  *
@@ -45,15 +50,64 @@ public class ChatBot extends ActivityHandler {
             "oder per E-Mail an: support@itech-bs14.de";
     public static final Pattern VALID_EMAIL_ADDRESS_REGEX =
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
+    private static final String MITARBEITER = "Mitarbeiteranliegen";
+    private static final String MITARBEITER2 = "Mit Mitarbeiter Reden";
+    private static final String MITARBEITER3 = "Einen Mitarbeiter loben/bescherde einreichen";
+    private static final String ANDERES = "Anderes Problem";
 
+    Problems problems = new Problems();
 
     @Autowired
-    public ChatBot(ConversationState withConversationState, UserState withUserState, Dialog withDialog) {
+    public ChatBot(com.microsoft.bot.builder.UserState withUserState, ConversationState withConversationState) {
         userState = withUserState;
         conversationState = withConversationState;
-        dialog = withDialog;
     }
 
+
+//
+    @Override
+    protected CompletableFuture<Void> onMessageActivity(TurnContext turnContext) {
+        // Get state data from UserState.
+//        StatePropertyAccessor<UserState> stateAccessor =
+//                UserState.createProperty("NewUserState");
+//        CompletableFuture<UserState> stateFuture =
+//                stateAccessor.get(turnContext, UserState::new);
+
+        return turnContext
+                .sendActivity(MessageFactory.text(""))
+
+//                stateFuture
+                        .thenApply(thisUserState -> {
+                    if (problems.getControl() == 100){
+                        problems.setControl(0);
+                        return problems.sendResponseAnswerCard(turnContext);
+                    }
+                    // This example hard-codes specific utterances.
+                    // You should use LUIS or QnA for more advance language understanding.
+                    String text = turnContext.getActivity().getText();
+                    switch (text) {
+                        case LOGIN: return turnContext.sendActivity("[IMPLEMENTIERUNG LOGIN]");
+                        case SERVER: return onTurn(turnContext);
+                        case PROGRAM: return turnContext.sendActivity("[IMPLEMENTIERUNG PROGRAM]");
+                        case CONTRACT: return turnContext.sendActivity("[IMPLEMENTIERUNG CONTRACT]");
+                        case PROJECT: return turnContext.sendActivity("[IMPLEMENTIERUNG PROJECT]");
+                        case MITARBEITER: return problems.sendWorkerCard(turnContext);
+                        case MITARBEITER2: return problems.sendOtherCard(turnContext);
+                        case MITARBEITER3: return problems.sendAnswerCard(turnContext);
+                        case ANDERES: return problems.sendOtherCard(turnContext);
+                        default:
+                            return turnContext.sendActivity("Ungültige Eingabe. Bitte wählen Sie ein Anliegen aus.");
+                    }
+                })
+                // Save any state changes.
+//                .thenApply(response -> userState.saveChanges(turnContext))
+                // make the return value happy.
+                .thenApply(task -> null);
+    }
+
+
+
+    // Wilkommensnachricht, standard bei jedem chatfenster
     @Override
     protected CompletableFuture<Void> onMembersAdded(List<ChannelAccount> membersAdded, TurnContext turnContext
     ) {
@@ -65,7 +119,8 @@ public class ChatBot extends ActivityHandler {
                 .collect(CompletableFutures.toFutureList()).thenApply(resourceResponses -> null);
     }
 
-    private CompletableFuture<ResourceResponse> sendIntroCard(TurnContext turnContext) {
+    // INTRO
+    CompletableFuture<ResourceResponse> sendIntroCard(TurnContext turnContext) {
         HeroCard card = new HeroCard();
         card.setTitle("Willkommen im Kunden-Chatsupport!");
         card.setText("Hallo! Ich unterstütze Sie bei support-spezifischen Fragen. Welches Anliegen haben Sie?");
@@ -80,6 +135,8 @@ public class ChatBot extends ActivityHandler {
         return turnContext.sendActivity(response);
     }
 
+
+    //ALlgemeiner Header für CardActions... sehr vereinfacht und übersichtlich gemacht
     private CardAction returnNewCardAction(String type) {
         CardAction action = new CardAction();
         action.setType(ActionTypes.MESSAGE_BACK);
