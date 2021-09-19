@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 
-
 public class Problems {
 
     private static final String MITARBEITER2 = "Mit Mitarbeiter Reden";
@@ -24,7 +23,7 @@ public class Problems {
     private int control = 0;
 
 
-       private CardAction returnNewCardAction(String type) {
+    private CardAction returnNewCardAction(String type) {
         CardAction action = new CardAction();
         action.setType(ActionTypes.MESSAGE_BACK);
         action.setTitle(type);
@@ -33,9 +32,6 @@ public class Problems {
         action.setValue(type);
         return action;
     }
-
-
-
 
     //Mitarbeiter END Card
     protected CompletableFuture<ResourceResponse> sendOtherCard(TurnContext turnContext) {
@@ -49,8 +45,6 @@ public class Problems {
         Activity response = MessageFactory.attachment(card.toAttachment());
         return turnContext.sendActivity(response);
     }
-
-
 
     //Standard END Card /UNSUSED
     protected CompletableFuture<ResourceResponse> sendEndCard(TurnContext turnContext) {
@@ -71,7 +65,6 @@ public class Problems {
                 "Sie können..."
         );
 
-
         List<String> actions = new ArrayList<>();
         actions.add(MITARBEITER2);
         actions.add(MITARBEITER3);
@@ -88,7 +81,7 @@ public class Problems {
     //Initialisierung von der Rückmeldung
     protected CompletableFuture<ResourceResponse> sendAnswerCard(TurnContext turnContext) {
         control = 100;
-        Activity response = MessageFactory.text("");
+        Activity response = MessageFactory.text("Schreiben sie hier einfach ihre Rückmeldung, wir leiten sie daraufhin an unseren Mitarbeiter weiter.");
         return turnContext.sendActivity(response);
     }
 
@@ -117,12 +110,11 @@ public class Problems {
     }
 
 
-
-    protected int getControl () {
-           return  this.control;
+    protected int getControl() {
+        return this.control;
     }
 
     protected void setControl(int control) {
-           this.control = control;
+        this.control = control;
     }
 }

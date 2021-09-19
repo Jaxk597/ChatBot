@@ -5,6 +5,7 @@ package com.mycompany.echo;
 
 import com.codepoetics.protonpack.collectors.CompletableFutures;
 import com.microsoft.bot.builder.*;
+import com.microsoft.bot.builder.UserState;
 import com.microsoft.bot.dialogs.Dialog;
 import com.microsoft.bot.schema.*;
 import org.apache.commons.lang3.StringUtils;
@@ -17,10 +18,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.regex.Pattern;
 
 
 /**
@@ -50,62 +47,19 @@ public class ChatBot extends ActivityHandler {
             "oder per E-Mail an: support@itech-bs14.de";
     public static final Pattern VALID_EMAIL_ADDRESS_REGEX =
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
-    private static final String MITARBEITER = "Mitarbeiteranliegen";
     private static final String MITARBEITER2 = "Mit Mitarbeiter Reden";
     private static final String MITARBEITER3 = "Einen Mitarbeiter loben/bescherde einreichen";
-    private static final String ANDERES = "Anderes Problem";
+    private static final String MITARBEITER4 = "Rückmeldung Senden";
+
 
     Problems problems = new Problems();
 
     @Autowired
-    public ChatBot(com.microsoft.bot.builder.UserState withUserState, ConversationState withConversationState) {
+    public ChatBot(ConversationState withConversationState, UserState withUserState, Dialog withDialog) {
         userState = withUserState;
         conversationState = withConversationState;
+        dialog = withDialog;
     }
-
-
-//
-    @Override
-    protected CompletableFuture<Void> onMessageActivity(TurnContext turnContext) {
-        // Get state data from UserState.
-//        StatePropertyAccessor<UserState> stateAccessor =
-//                UserState.createProperty("NewUserState");
-//        CompletableFuture<UserState> stateFuture =
-//                stateAccessor.get(turnContext, UserState::new);
-
-        return turnContext
-                .sendActivity(MessageFactory.text(""))
-
-//                stateFuture
-                        .thenApply(thisUserState -> {
-                    if (problems.getControl() == 100){
-                        problems.setControl(0);
-                        return problems.sendResponseAnswerCard(turnContext);
-                    }
-                    // This example hard-codes specific utterances.
-                    // You should use LUIS or QnA for more advance language understanding.
-                    String text = turnContext.getActivity().getText();
-                    switch (text) {
-                        case LOGIN: return turnContext.sendActivity("[IMPLEMENTIERUNG LOGIN]");
-                        case SERVER: return onTurn(turnContext);
-                        case PROGRAM: return turnContext.sendActivity("[IMPLEMENTIERUNG PROGRAM]");
-                        case CONTRACT: return turnContext.sendActivity("[IMPLEMENTIERUNG CONTRACT]");
-                        case PROJECT: return turnContext.sendActivity("[IMPLEMENTIERUNG PROJECT]");
-                        case MITARBEITER: return problems.sendWorkerCard(turnContext);
-                        case MITARBEITER2: return problems.sendOtherCard(turnContext);
-                        case MITARBEITER3: return problems.sendAnswerCard(turnContext);
-                        case ANDERES: return problems.sendOtherCard(turnContext);
-                        default:
-                            return turnContext.sendActivity("Ungültige Eingabe. Bitte wählen Sie ein Anliegen aus.");
-                    }
-                })
-                // Save any state changes.
-//                .thenApply(response -> userState.saveChanges(turnContext))
-                // make the return value happy.
-                .thenApply(task -> null);
-    }
-
-
 
     // Wilkommensnachricht, standard bei jedem chatfenster
     @Override
@@ -169,15 +123,21 @@ public class ChatBot extends ActivityHandler {
             case CONTRACT:
                 return enterVertragsanliegen(turnContext);
             case PROJECT:
-                return turnContext.sendActivity("[IMPLEMENTIERUNG PROJECT]").thenApply(result -> null);
+                return problems.sendWorkerCard(turnContext).thenApply(result -> null);
             case OTHER:
                 return turnContext.sendActivity(REPLY_OTHER).thenApply(result -> null);
+            case MITARBEITER2:
+                return problems.sendOtherCard(turnContext).thenApply(result -> null);
+            case MITARBEITER3:
+                return problems.sendAnswerCard(turnContext).thenApply(result -> null);
+            case MITARBEITER4:
+                return problems.sendResponseAnswerCard(turnContext).thenApply(result -> null);
             default:
-                if (mailAddressIsValid(turnContext.getActivity().getText())) {
-                    turnContext.sendActivity("Es hat geklappt. Sie erhalten in Kürze eine Mail.");
-                    sendIntroCard(turnContext);
-                } else {
-                    if (userInput.contains("@") && mailAddressIsValid(userInput)) {
+                if (isValidMailAddress(userInput)) {
+                    turnContext.sendActivity("Vielen Dank! Bitte überprüfen Sie Ihr E-Mail-Postfach.");
+                } else if (userInput.contains("1234")) {
+                    onServerProblems(turnContext);
+                    if (isValidMailAddress(userInput)) {
                         turnContext.sendActivity("Vielen Dank! Bitte überprüfen Sie Ihr E-Mail-Postfach.");
                     } else if (userInput.contains("1234")) {
                         onServerProblems(turnContext);
@@ -229,7 +189,7 @@ public class ChatBot extends ActivityHandler {
         return Dialog.run(dialog, turnContext, conversationState.createProperty("DialogState"));
     }
 
-    public static boolean mailAddressIsValid(String emailStr) {
+    public static boolean isValidMailAddress(String emailStr) {
         Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(emailStr);
         return matcher.find();
     }
@@ -269,15 +229,5 @@ public class ChatBot extends ActivityHandler {
         } else if (turnContext.getActivity().getText().equals("Anderes")) {
             turnContext.sendActivity(REPLY_OTHER);
         }
-    }
-
-    @Override
-    public CompletableFuture<Void> onTurn(
-            TurnContext turnContext
-    ) {
-        return super.onTurn(turnContext)
-                // Save any state changes that might have occurred during the turn.
-                .thenCompose(result -> conversationState.saveChanges(turnContext))
-                .thenCompose(result -> userState.saveChanges(turnContext));
     }
 }
