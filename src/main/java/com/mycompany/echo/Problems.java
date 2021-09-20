@@ -16,8 +16,8 @@ import java.util.concurrent.CompletableFuture;
 
 public class Problems {
 
-    private static final String MITARBEITER2 = "Mit Mitarbeiter Reden";
-    private static final String MITARBEITER3 = "Einen Mitarbeiter loben/bescherde einreichen";
+    private static final String MITARBEITER2 = "talk to an employee.";
+    private static final String MITARBEITER3 = "commend/make a complaint.";
 
 
     private int control = 0;
@@ -36,33 +36,20 @@ public class Problems {
     //Mitarbeiter END Card
     protected CompletableFuture<ResourceResponse> sendOtherCard(TurnContext turnContext) {
         HeroCard card = new HeroCard();
-        card.setTitle("Bitte Melden sie sich bei einem Mitarbeiter!");
-        card.setText(
-                "Sie können einen unserer Mitarbeiter erreichen über Email:"
-                        + " itsupport@unternehmen.com oder über Telefon: "
-                        + "0900/1234567890"
+        card.setText("Please reach out to our support team if you have a complex issue.\n" +
+                "Mo - Sa from 8am - 8pm : +49 221 - 6392678\n" +
+                "or via e-mail: support@-solutionsit.de"
         );
         Activity response = MessageFactory.attachment(card.toAttachment());
         return turnContext.sendActivity(response);
     }
 
-    //Standard END Card /UNSUSED
-    protected CompletableFuture<ResourceResponse> sendEndCard(TurnContext turnContext) {
-        HeroCard card = new HeroCard();
-        card.setTitle("Vielen Dank");
-        card.setText("Wir hoffen, das wir ihnen weiterhelfen konnten");
-        Activity response = MessageFactory.attachment((card.toAttachment()));
-        return turnContext.sendActivity(response);
-
-
-    }
-
     //Dialog für Mitarbeiter
     protected CompletableFuture<ResourceResponse> sendWorkerCard(TurnContext turnContext) {
         HeroCard card = new HeroCard();
-        card.setTitle("Probleme mit unseren Mitarbeitern?");
+        card.setTitle("You have an issue about one of our employee?");
         card.setText(
-                "Sie können..."
+                "You can..."
         );
 
         List<String> actions = new ArrayList<>();
@@ -81,7 +68,7 @@ public class Problems {
     //Initialisierung von der Rückmeldung
     protected CompletableFuture<ResourceResponse> sendAnswerCard(TurnContext turnContext) {
         control = 100;
-        Activity response = MessageFactory.text("Schreiben sie hier einfach ihre Rückmeldung, wir leiten sie daraufhin an unseren Mitarbeiter weiter.");
+        Activity response = MessageFactory.text("Please enter your message now. We will make sure that it reaches the right department.");
         return turnContext.sendActivity(response);
     }
 
@@ -90,31 +77,21 @@ public class Problems {
         Writer fileWriter;
         File file;
         try {
-            file = new File("Rueckmeldung.txt");
-            fileWriter = new FileWriter("Rueckmeldung.txt");
+            file = new File("feedback.txt");
+            fileWriter = new FileWriter("feedback.txt");
             fileWriter.write(turnContext.getActivity().getText());
             fileWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
         HeroCard card = new HeroCard();
-        card.setTitle("Vielen Dank für ihre Rückmeldung!");
-        card.setText("Wir freuen uns über ihre Rückmeldung über unseren Service");
+        card.setTitle("Thank you for your feedback!");
+        card.setText("We work on our service continuously.");
         Activity response = MessageFactory.attachment((card.toAttachment()));
         return turnContext.sendActivity(response);
     }
 
-    protected static CompletableFuture<ResourceResponse> sendIdCard(TurnContext turnContext) {
-        Activity response = null;
-        return turnContext.sendActivity(response);
-    }
-
-
     protected int getControl() {
         return this.control;
-    }
-
-    protected void setControl(int control) {
-        this.control = control;
     }
 }

@@ -51,23 +51,7 @@ public class Application extends BotDependencyConfiguration {
      * @return The Bot implementation for this application.
      */
     @Bean
-    public Bot getBot(ConversationState conversationState, UserState userState, Dialog dialog) {
-        return new ChatBot(conversationState, userState, dialog);
-    }
-
-    @Bean
-    public Dialog getRootDialog(UserState userState) {
-        return new MainDialog(userState);
-    }
-
-    /**
-     * Returns a custom Adapter that provides error handling.
-     *
-     * @param configuration The Configuration object to use.
-     * @return An error handling BotFrameworkHttpAdapter.
-     */
-    @Override
-    public BotFrameworkHttpAdapter getBotFrameworkHttpAdaptor(Configuration configuration) {
-        return new AdapterWithErrorHandler(configuration);
+    public Bot getBot(ConversationState conversationState) {
+        return new ChatBot(conversationState);
     }
 }
